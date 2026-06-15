@@ -116,7 +116,7 @@ export interface SearchHistoryEntry {
 export interface SavedReport {
   id: string;
   report_id: string;
-  report_type: 'interaction' | 'pharmacology' | 'structure';
+  report_type: 'interaction' | 'pharmacology' | 'structure' | 'phytoinsight';
   report_data: Record<string, unknown>;
   drug_name?: string;
   herb_name?: string;
@@ -152,6 +152,86 @@ export interface StructureResponse {
   error?: string;
   spellingCorrection?: SpellingCorrection | null;
   confidenceReasoning?: string;
+}
+
+// ─── PhytoInsight: Deep Phytochemical Intelligence ───
+
+export type BiosyntheticPathway =
+  | "Shikimate Pathway"
+  | "Mevalonate Pathway"
+  | "Methylerythritol Phosphate Pathway"
+  | "Polyketide Pathway"
+  | "Alkaloid Biosynthesis"
+  | "Mixed Biosynthesis";
+
+export type CompoundSuperclass =
+  | "Alkaloids"
+  | "Terpenoids"
+  | "Flavonoids"
+  | "Phenylpropanoids"
+  | "Polyketides"
+  | "Fatty Acid Derivatives"
+  | "Glucosinolates"
+  | "Cyanogenic Glycosides"
+  | "Sulfur Compounds"
+  | "Other";
+
+export interface PhytoCompoundProfile {
+  name: string;
+  iupacName: string;
+  molecularFormula: string;
+  molecularWeight: number;
+  smiles: string;
+  inchi: string;
+  inchiKey: string;
+  casNumber: string;
+  cid: number;
+  chebiId: string;
+  imageUrl2D: string;
+  conformerId3D: string;
+  sourceOrganism: string;
+  compoundClass: string;
+  superclass: CompoundSuperclass;
+  biosyntheticPathway: BiosyntheticPathway;
+  pharmacologicalActions: string[];
+  isMajorConstituent: boolean;
+  typicalConcentration?: string;
+  pubmedReferences: string[];
+  /** Relative abundance rank among identified compounds (1 = most abundant) */
+  abundanceRank?: number;
+}
+
+export interface PhytoClassDistribution {
+  className: string;
+  superclass: CompoundSuperclass;
+  compoundCount: number;
+  majorCompounds: string[];
+  color: string;
+}
+
+export interface PhytoPathwaySummary {
+  pathway: BiosyntheticPathway;
+  compoundCount: number;
+  representativeCompounds: string[];
+}
+
+export interface PhytoInsightResponse {
+  herb: string;
+  herbCanonicalName: string;
+  herbFamily?: string;
+  herbPartUsed?: string;
+  compounds: PhytoCompoundProfile[];
+  classDistribution: PhytoClassDistribution[];
+  pathwaySummary: PhytoPathwaySummary[];
+  pharmacologicalActions: PharmacologyAction[];
+  evidenceLevel: "High" | "Moderate" | "Low" | "No Evidence";
+  confidence: "High" | "Moderate" | "Low";
+  sourcesUsed: string[];
+  noResultsMessage?: string;
+  error?: string;
+  spellingCorrection?: SpellingCorrection | null;
+  confidenceReasoning?: string;
+  references?: PharmacologyReference[];
 }
 
 // ─── Structured AI Report Sections ───
