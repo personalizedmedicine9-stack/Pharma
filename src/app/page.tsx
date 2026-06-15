@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { AlertTriangle, FlaskConical, FileText, ExternalLink, ArrowRight, Beaker, Leaf, Hexagon, TreePine, PlayCircle, Quote } from 'lucide-react';
 import Link from 'next/link';
 import AuthModal from '@/components/pharma/AuthModal';
@@ -8,10 +8,8 @@ import ScientificDisclaimer from '@/components/pharma/ScientificDisclaimer';
 import { API_SOURCES, EXAMPLE_SEARCHES } from '@/lib/knowledge-base';
 
 export default function Home() {
-  const [consentGiven, setConsentGiven] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const mountedRef = useRef(false);
-
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+ 
   useEffect(() => {
     if (!mountedRef.current) {
       mountedRef.current = true;
@@ -37,9 +35,7 @@ export default function Home() {
 
   return (
     <>
-      {!consentGiven && <ConsentPopup onAccept={handleAcceptConsent} />}
-
-      <div className="min-h-screen bg-[#f8fafc] text-gray-900 antialiased flex flex-col">
+        <div className="min-h-screen bg-[#f8fafc] text-gray-900 antialiased flex flex-col">
         <main className="flex-1 max-w-6xl mx-auto px-4 md:px-8 lg:px-12 py-8 w-full">
           <div className="space-y-8">
 
