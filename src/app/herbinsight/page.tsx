@@ -9,9 +9,9 @@ import type { PhytoInsightResponse } from '@/lib/types';
 export default function HerbInsightPage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  const handleHerbInsightSearch = async (herb: string): Promise<HerbInsightResponse | null> => {
+  const handleHerbInsightSearch = async (herb: string): Promise<PhytoInsightResponse | null> => {
     try {
-      const res = await fetch('/api/HerbInsight', {
+      const res = await fetch('/api/phytoinsight', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ herb }),
@@ -27,12 +27,10 @@ export default function HerbInsightPage() {
     <>
       <div className="min-h-screen bg-[#f8fafc] text-gray-900 antialiased flex flex-col">
         <main className="flex-1 max-w-6xl mx-auto px-4 md:px-8 lg:px-12 py-8 w-full">
-          <HerbInsightEngine onSearch={handleHerbInsightSearch} onSignInRequired={() => setAuthModalOpen(true)} />
+          <PhytoInsightEngine onSearch={handleHerbInsightSearch} onSignInRequired={() => setAuthModalOpen(true)} />
         </main>
-
         <ScientificDisclaimer />
       </div>
-
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </>
   );
