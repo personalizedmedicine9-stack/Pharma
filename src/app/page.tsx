@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { AlertTriangle, FlaskConical, FileText, ExternalLink, ArrowRight, Beaker, Leaf, Hexagon, TreePine, PlayCircle, Quote } from 'lucide-react';
 import Link from 'next/link';
 import AuthModal from '@/components/pharma/AuthModal';
-import ConsentPopup from '@/components/pharma/ConsentPopup';
 import ScientificDisclaimer from '@/components/pharma/ScientificDisclaimer';
 import { API_SOURCES, EXAMPLE_SEARCHES } from '@/lib/knowledge-base';
 
