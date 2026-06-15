@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import HerbInsightEngine from '@/components/pharma/HerbInsightEngine';
+import PhytoInsightEngine from '@/components/pharma/PhytoInsightEngine';
 import AuthModal from '@/components/pharma/AuthModal';
 import ScientificDisclaimer from '@/components/pharma/ScientificDisclaimer';
-import type { HerbInsightResponse } from '@/lib/types';
+import type { PhytoInsightResponse } from '@/lib/types';
 
 export default function HerbInsightPage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
