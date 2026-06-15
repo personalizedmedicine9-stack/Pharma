@@ -16,7 +16,7 @@ export default function Home() {
   useEffect(() => {
     if (!mountedRef.current) {
       mountedRef.current = true;
-      const stored = localStorage.getItem('pharmainsight-consent');
+      const stored = localStorage.getItem('phytoinsight-consent');
       if (stored === 'true') {
         queueMicrotask(() => setConsentGiven(true));
       }
@@ -24,7 +24,7 @@ export default function Home() {
   }, []);
 
   const handleAcceptConsent = () => {
-    localStorage.setItem('pharmainsight-consent', 'true');
+    localStorage.setItem('phytoinsight-consent', 'true');
     setConsentGiven(true);
   };
 
@@ -52,7 +52,7 @@ export default function Home() {
                   EVIDENCE-BASED SCIENTIFIC PLATFORM
                 </div>
                 <h2 className="text-3xl md:text-5xl font-black text-[#0f172a] mb-1 tracking-tight leading-tight">
-                  PhytoInsight
+                  HebInsight
                 </h2>
                 <p className="text-[10px] md:text-xs text-gray-400 font-semibold mb-3">Evidence-Based Scientific Intelligence Platform</p>
                 <p className="text-gray-500 max-w-2xl mx-auto leading-relaxed mb-4 md:mb-6 text-sm md:text-base font-medium">
@@ -68,7 +68,7 @@ export default function Home() {
                     <FlaskConical size={16} /> Pharmacology & Phytochemistry
                     <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                   </Link>
-                  <Link href="/phytoinsight" className="flex items-center gap-2 px-4 md:px-6 py-3 bg-amber-600 text-white rounded-xl text-xs md:text-sm font-bold shadow-lg hover:bg-amber-700 transition-all hover:shadow-xl group">
+                  <Link href="/ HebInsight" className="flex items-center gap-2 px-4 md:px-6 py-3 bg-amber-600 text-white rounded-xl text-xs md:text-sm font-bold shadow-lg hover:bg-amber-700 transition-all hover:shadow-xl group">
                     <TreePine size={16} /> HerbInsight
                     <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                   </Link>

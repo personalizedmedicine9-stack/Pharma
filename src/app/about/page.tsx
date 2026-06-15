@@ -485,7 +485,7 @@ export default function AboutPage() {
                 </p>
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                   <p className="text-xs text-gray-700 leading-relaxed font-medium italic">
-                    Mostafa, M., Alhaidari, R., &amp; Mohamed, S. (2026). PhytoInsight: An Evidence-Based Scientific Intelligence Platform.{' '}
+                    Mostafa, M., Alhaidari, R., &amp; Mohamed, S. (2026). PhytoInsight: An Evidence-Based Scientific Intelligence Platform. PhytoInsight.{' '}
                     <a
                       href="https://www.phytoinsight.com"
                       target="_blank"

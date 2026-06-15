@@ -118,7 +118,7 @@ export default function HowToUsePage() {
                   <Video size={12} /> VIDEO TUTORIAL & STEP-BY-STEP GUIDE
                 </div>
                 <h2 className="text-3xl md:text-5xl font-black text-[#0f172a] mb-2 tracking-tight leading-tight">
-                  How to Use PharmaInsight
+                  How to Use PhytoInsight
                 </h2>
                 <p className="text-gray-500 max-w-2xl mx-auto leading-relaxed text-sm md:text-base font-medium">
                   Watch the video overview or follow the step-by-step guide below to learn how to use all features of the platform.
@@ -134,13 +134,13 @@ export default function HowToUsePage() {
                   <h3 className="text-lg font-black text-[#0f172a]">Platform Overview Video</h3>
                 </div>
                 <p className="text-sm text-gray-500 font-medium mt-1">
-                  Watch a complete walkthrough of PharmaInsight&apos;s features and capabilities
+                  Watch a complete walkthrough of PhytoInsight&apos;s features and capabilities
                 </p>
               </div>
               <div className="aspect-video bg-black">
                 <iframe
                   src="https://app.heygen.com/embeds/5ae70eb72351423cbb7fabc114dc5d9f"
-                  title="PharmaInsight — Evidence-Based Scientific Intelligence"
+                  title="PhytoInsight — Evidence-Based Scientific Intelligence"
                   allow="autoplay; encrypted-media; picture-in-picture"
                   allowFullScreen
                   className="w-full h-full"
@@ -292,12 +292,12 @@ export default function HowToUsePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
                   {
-                    q: 'What databases does PharmaInsight use?',
+                    q: 'What databases does PhytoInsight use?',
                     a: 'PubMed, CrossRef, OpenAlex, OpenFDA, PubChem, ChEBI, and NPAtlas — 7 global scientific databases integrated into one platform.',
                   },
                   {
-                    q: 'Is PharmaInsight free to use?',
-                    a: 'Yes, PharmaInsight is completely free and open source. All features are available without registration.',
+                    q: 'Is PhytoInsight free to use?',
+                    a: 'Yes, PhytoInsight is completely free and open source. All features are available without registration.',
                   },
                   {
                     q: 'How accurate are the interaction results?',
