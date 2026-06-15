@@ -51,7 +51,7 @@ export default function Home() {
                   EVIDENCE-BASED SCIENTIFIC PLATFORM
                 </div>
                 <h2 className="text-3xl md:text-5xl font-black text-[#0f172a] mb-1 tracking-tight leading-tight">
-                  HebInsight
+                  PhytoInsight
                 </h2>
                 <p className="text-[10px] md:text-xs text-gray-400 font-semibold mb-3">Evidence-Based Scientific Intelligence Platform</p>
                 <p className="text-gray-500 max-w-2xl mx-auto leading-relaxed mb-4 md:mb-6 text-sm md:text-base font-medium">
