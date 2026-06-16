@@ -1,0 +1,159 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+// ─── Force dynamic rendering (fixes Next.js 16 "Failed to find Server Action" bug) ──
+export const dynamic = 'force-dynamic';
+
+/**
+ * Chemical Structure OCR API Route
+ *
+ * Analyzes uploaded images of chemical structures using AI vision model.
+ * Supports: PNG, JPG, JPEG, GIF, WebP (web-native formats).
+ * TIFF/BMP: User should convert to PNG/JPG first, or use on Vercel where sharp is available.
+ *
+ * POST /api/structure/ocr
+ * Body: FormData with 'image' file
+ */
+
+const VALID_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.tif', '.tiff', '.bmp'];
+const WEB_NATIVE = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
+
+function guessMimeType(fileName: string): string {
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  const map: Record<string, string> = {
+    png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+    gif: 'image/gif', webp: 'image/webp',
+    tif: 'image/tiff', tiff: 'image/tiff', bmp: 'image/bmp',
+  };
+  return map[ext || ''] || 'application/octet-stream';
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    const imageFile = formData.get('image') as File | null;
+
+    if (!imageFile) {
+      return NextResponse.json({ success: false, error: 'No image file provided.' }, { status: 400 });
+    }
+
+    if (imageFile.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ success: false, error: 'Image too large. Max 10MB.' }, { status: 400 });
+    }
+
+    const fileName = imageFile.name.toLowerCase();
+    const ext = '.' + (fileName.split('.').pop() || '');
+
+    if (!VALID_EXTENSIONS.some(v => fileName.endsWith(v))) {
+      return NextResponse.json({ success: false, error: `Unsupported format "${ext}". Supported: ${VALID_EXTENSIONS.join(', ')}` }, { status: 400 });
+    }
+
+    // For TIFF/BMP: try to convert with sharp, fallback to asking user
+    let finalBuffer: Buffer;
+    let finalMimeType: string;
+
+    if (!WEB_NATIVE.some(v => fileName.endsWith(v))) {
+      // TIFF or BMP — try sharp conversion
+      try {
+        const sharp = (await import('sharp')).default;
+        const arrayBuffer = await imageFile.arrayBuffer();
+        const inputBuffer = Buffer.from(arrayBuffer);
+        finalBuffer = await sharp(inputBuffer).png({ compressionLevel: 0 }).toBuffer();
+        finalMimeType = 'image/png';
+      } catch {
+        return NextResponse.json({
+          success: false,
+          error: `TIFF/BMP format requires image conversion which is not available locally. Please save your image as PNG or JPG first, then upload again.`,
+          hint: 'On the deployed Vercel version, TIFF/BMP conversion works automatically.',
+        }, { status: 400 });
+      }
+    } else {
+      // Web-native format — read directly
+      const arrayBuffer = await imageFile.arrayBuffer();
+      finalBuffer = Buffer.from(arrayBuffer);
+      finalMimeType = guessMimeType(fileName);
+    }
+
+    // Build data URL for AI
+    const base64 = finalBuffer.toString('base64');
+    const dataUrl = `data:${finalMimeType};base64,${base64}`;
+
+    // Try AI vision model
+    let parsed: Record<string, unknown>;
+
+    try {
+      const ZAI = (await import('z-ai-web-dev-sdk')).default;
+      const zai = await ZAI.create();
+
+      const completion = await zai.chat.completions.create({
+        messages: [
+          {
+            role: 'system',
+            content: `You are a chemical structure recognition AI. Analyze the image and respond ONLY with JSON:
+{"smiles":"SMILES or null","compoundName":"name or null","inchi":"InChI or null","casNumber":"CAS or null","molecularFormula":"formula or null","confidence":"high/medium/low","reasoning":"explanation"}
+If not a chemical structure, set all to null.`
+          },
+          {
+            role: 'user',
+            content: [
+              { type: 'image_url', image_url: { url: dataUrl } },
+              { type: 'text', text: 'Identify the chemical structure in this image. Extract SMILES, name, InChI, CAS, formula.' }
+            ]
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: 800,
+      });
+
+      const text = completion.choices?.[0]?.message?.content || '';
+      try {
+        const m = text.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, text];
+        parsed = JSON.parse((m[1] || text).trim());
+      } catch {
+        const sm = text.match(/SMILES[:\s]*([^\s,}]+)/i);
+        const nm = text.match(/(?:name|compound)[:\s]*([^\n,}]+)/i);
+        parsed = { smiles: sm?.[1] || null, compoundName: nm?.[1] || null, confidence: 'low', reasoning: 'Partial extraction' };
+      }
+    } catch {
+      return NextResponse.json({
+        success: false,
+        error: 'AI image analysis is not available locally. This feature works on the deployed Vercel version.',
+        hint: 'Use text search or upload .mol/.sdf files instead. Images work on Vercel.',
+      }, { status: 503 });
+    }
+
+    const smiles = (parsed.smiles as string) || null;
+    const compoundName = (parsed.compoundName as string) || null;
+    const inchi = (parsed.inchi as string) || null;
+    const casNumber = (parsed.casNumber as string) || null;
+    const molecularFormula = (parsed.molecularFormula as string) || null;
+    const searchQuery = smiles || inchi || casNumber || compoundName || null;
+
+    if (!searchQuery) {
+      return NextResponse.json({
+        success: false,
+        error: 'Could not recognize a chemical structure in this image. Try a clearer image or use text search.',
+        smiles, compoundName, inchi, casNumber, molecularFormula,
+        confidence: (parsed.confidence as string) || 'low',
+        format: 'Image (AI OCR)',
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      smiles: smiles || undefined,
+      compoundName: compoundName || undefined,
+      inchi: inchi || undefined,
+      casNumber: casNumber || undefined,
+      molecularFormula: molecularFormula || undefined,
+      confidence: (parsed.confidence as string) || 'medium',
+      reasoning: (parsed.reasoning as string) || undefined,
+      searchQuery,
+      fileName: imageFile.name,
+      format: 'Image (AI OCR)',
+    });
+
+  } catch (error) {
+    console.error('[Structure OCR] Error:', error);
+    return NextResponse.json({ success: false, error: `Failed to analyze image: ${error instanceof Error ? error.message : 'Unknown error'}` }, { status: 500 });
+  }
+}
