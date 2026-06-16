@@ -1,5 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
+// ─── Image OCR Support ────────────────────────────────────────────────────────
+const IMAGE_EXTS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.tif', '.tiff', '.bmp'];
+const WEB_NATIVE_EXTS = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
 
+function guessImageMimeType(fileName: string): string {
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  const map: Record<string, string> = {
+    png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+    gif: 'image/gif', webp: 'image/webp',
+    tif: 'image/tiff', tiff: 'image/tiff', bmp: 'image/bmp',
+  };
+  return map[ext || ''] || 'application/octet-stream';
+}
+
+async function handleImageOCR(imageFile: File): Promise<Record<string, unknown>> {
+  if (imageFile.size > 10 * 1024 * 1024) {
+    return { success: false, error: 'Image too large. Maximum size is 10MB.' };
+  }
+  const fileName = imageFile.name.toLowerCase();
+  let finalBuffer: Buffer;
+  let finalMimeType: string;
+  if (!WEB_NATIVE_EXTS.some(v => fileName.endsWith(v))) {
+    try {
+      const sharpModule = await import('sharp');
+      const sharp = sharpModule.default || sharpModule;
+      const arrayBuffer = await imageFile.arrayBuffer();
+      finalBuffer = await sharp(Buffer.from(arrayBuffer)).png({ compressionLevel: 0 }).toBuffer();
+      finalMimeType = 'image/png';
+    } catch { return { success: false, error: 'TIFF/BMP conversion failed. Save as PNG/JPG.' }; }
+  } else {
+    const arrayBuffer = await imageFile.arrayBuffer();
+    finalBuffer = Buffer.from(arrayBuffer);
+    finalMimeType = guessImageMimeType(fileName);
+  }
+  const base64 = finalBuffer.toString('base64');
+  const dataUrl = `data:${finalMimeType};base64,${base64}`;
+  let parsed: Record<string, unknown>;
+  try {
+    const zaiModule = await import('z-ai-web-dev-sdk');
+    const ZAI = zaiModule.default || zaiModule;
+    const zai = await ZAI.create();
+    const completion = await zai.chat.completions.create({
+      messages: [
+        { role: 'system', content: 'You are a chemical structure recognition AI. Analyze the image and respond ONLY with valid JSON: {"smiles":"SMILES or null","compoundName":"name or null","inchi":"InChI or null","casNumber":"CAS or null","molecularFormula":"formula or null","confidence":"high/medium/low","reasoning":"explanation"}' },
+        { role: 'user', content: [
+          { type: 'image_url', image_url: { url: dataUrl } },
+          { type: 'text', text: 'Identify the chemical structure. Extract SMILES, name, InChI, CAS, formula.' }
+        ]}
+      ],
+      temperature: 0.1, max_tokens: 800,
+    });
+    const text = completion.choices?.[0]?.message?.content || '';
+    try { const c = text.replace(/```json\s*/gi,'').replace(/```\s*/gi,'').trim(); parsed = JSON.parse(c); }
+    catch { const sm = text.match(/SMILES[:\s]*([^\s,}"']+)/i); const nm = text.match(/(?:name|compound)[:\s]*([^\n,}"']+)/i); parsed = { smiles: sm?.[1]||null, compoundName: nm?.[1]||null, confidence:'low' }; }
+  } catch (aiError) { console.error('[OCR] AI failed:', aiError); return { success: false, error: 'AI image analysis failed. Try again or use text search.' }; }
+  const smiles = (parsed.smiles as string)||null;
+  const compoundName = (parsed.compoundName as string)||null;
+  const inchi = (parsed.inchi as string)||null;
+  const casNumber = (parsed.casNumber as string)||null;
+  const molecularFormula = (parsed.molecularFormula as string)||null;
+  const searchQuery = smiles||inchi||casNumber||compoundName||null;
+  if (!searchQuery) return { success:false, error:'Could not recognize a chemical structure. Try a clearer image.', smiles, compoundName, inchi, casNumber, molecularFormula, confidence:(parsed.confidence as string)||'low', format:'Image (AI OCR)' };
+  return { success:true, smiles:smiles||undefined, compoundName:compoundName||undefined, inchi:inchi||undefined, casNumber:casNumber||undefined, molecularFormula:molecularFormula||undefined, confidence:(parsed.confidence as string)||'medium', reasoning:(parsed.reasoning as string)||undefined, searchQuery, fileName:imageFile.name, format:'Image (AI OCR)' };
+}
 // ─── Force dynamic rendering (fixes Next.js 16 "Failed to find Server Action" bug) ──
 export const dynamic = 'force-dynamic';
 
@@ -440,7 +503,16 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
-
+    // ── Route image files to AI OCR handler ──
+    const fName = (file?.name || '').toLowerCase();
+    if (IMAGE_EXTS.some(ext => fName.endsWith(ext))) {
+      try {
+        const result = await handleImageOCR(file);
+        return NextResponse.json(result);
+      } catch (error) {
+        return NextResponse.json({ success: false, error: `Image analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}` }, { status: 500 });
+      }
+    }
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded.' }, { status: 400 });
     }
