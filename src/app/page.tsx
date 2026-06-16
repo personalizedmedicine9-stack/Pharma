@@ -1,14 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AlertTriangle, FlaskConical, FileText, ExternalLink, ArrowRight, Beaker, Leaf, Hexagon, TreePine, PlayCircle, Quote } from 'lucide-react';
 import Link from 'next/link';
 import AuthModal from '@/components/pharma/AuthModal';
+import ConsentPopup from '@/components/pharma/ConsentPopup';
 import ScientificDisclaimer from '@/components/pharma/ScientificDisclaimer';
 import { API_SOURCES, EXAMPLE_SEARCHES } from '@/lib/knowledge-base';
 
 export default function Home() {
-    const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      const stored = localStorage.getItem('phytoinsight-consent');
+      if (stored === 'true') {
+        queueMicrotask(() => setConsentGiven(true));
+      }
+    }
+  }, []);
+
+  const handleAcceptConsent = () => {
+    localStorage.setItem('phytoinsight-consent', 'true');
+    setConsentGiven(true);
+  };
 
   const evidencePreviews: Record<string, string> = {
     'WarfarinSt. John\'s Wort': 'Major CYP3A4 interaction · High risk bleeding',
@@ -20,7 +38,9 @@ export default function Home() {
 
   return (
     <>
-        <div className="min-h-screen bg-[#f8fafc] text-gray-900 antialiased flex flex-col">
+      {!consentGiven && <ConsentPopup onAccept={handleAcceptConsent} />}
+
+      <div className="min-h-screen bg-[#f8fafc] text-gray-900 antialiased flex flex-col">
         <main className="flex-1 max-w-6xl mx-auto px-4 md:px-8 lg:px-12 py-8 w-full">
           <div className="space-y-8">
 
@@ -32,7 +52,7 @@ export default function Home() {
                   EVIDENCE-BASED SCIENTIFIC PLATFORM
                 </div>
                 <h2 className="text-3xl md:text-5xl font-black text-[#0f172a] mb-1 tracking-tight leading-tight">
-                  PhytoInsight
+                  HebInsight
                 </h2>
                 <p className="text-[10px] md:text-xs text-gray-400 font-semibold mb-3">Evidence-Based Scientific Intelligence Platform</p>
                 <p className="text-gray-500 max-w-2xl mx-auto leading-relaxed mb-4 md:mb-6 text-sm md:text-base font-medium">
@@ -48,7 +68,7 @@ export default function Home() {
                     <FlaskConical size={16} /> Pharmacology & Phytochemistry
                     <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                   </Link>
-                  <Link href="/herbinsight" className="flex items-center gap-2 px-4 md:px-6 py-3 bg-amber-600 text-white rounded-xl text-xs md:text-sm font-bold shadow-lg hover:bg-amber-700 transition-all hover:shadow-xl group">
+                  <Link href="/ HebInsight" className="flex items-center gap-2 px-4 md:px-6 py-3 bg-amber-600 text-white rounded-xl text-xs md:text-sm font-bold shadow-lg hover:bg-amber-700 transition-all hover:shadow-xl group">
                     <TreePine size={16} /> HerbInsight
                     <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                   </Link>
@@ -122,8 +142,8 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Features - 4 boxes: Interaction, Pharmacology, HerbInsight, Chemical Structure */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Features - 3 boxes: Interaction, Pharmacology, Chemical Structure (NO HerbInsight box) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                 <div className="w-9 h-9 bg-[#0f172a] rounded-lg flex items-center justify-center mb-3">
                   <AlertTriangle size={18} className="text-white" />
@@ -137,13 +157,6 @@ export default function Home() {
                 </div>
                 <h4 className="font-bold text-gray-900 mb-1.5 text-sm">Pharmacology & Phytochemistry</h4>
                 <p className="text-xs text-gray-500 leading-relaxed">Explore pharmacological actions, active compounds, and molecular mechanisms from PubMed literature.</p>
-              </div>
-              <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                <div className="w-9 h-9 bg-amber-600 rounded-lg flex items-center justify-center mb-3">
-                  <TreePine size={18} className="text-white" />
-                </div>
-                <h4 className="font-bold text-gray-900 mb-1.5 text-sm">HerbInsight</h4>
-                <p className="text-xs text-gray-500 leading-relaxed">Deep phytochemical intelligence with compound profiles, biosynthetic pathways, and class distribution analysis.</p>
               </div>
               <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                 <div className="w-9 h-9 bg-cyan-600 rounded-lg flex items-center justify-center mb-3">
