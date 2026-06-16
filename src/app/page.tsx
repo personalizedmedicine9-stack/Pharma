@@ -122,7 +122,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Features - 3 boxes: Interaction, Pharmacology, Chemical Structure (NO PhytoInsight box) */}
+            {/* Features - 4 boxes: Interaction, Pharmacology, Chemical Structure, HerbInsight) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                 <div className="w-9 h-9 bg-[#0f172a] rounded-lg flex items-center justify-center mb-3">
