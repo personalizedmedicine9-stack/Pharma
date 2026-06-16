@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+export const runtime = 'nodejs';
+
 // ─── Image OCR Support ────────────────────────────────────────────────────────
 const IMAGE_EXTS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.tif', '.tiff', '.bmp'];
 const WEB_NATIVE_EXTS = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
@@ -502,7 +505,7 @@ function parseChemJSON(content: string): { smiles: string; molecularFormula: str
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File | null;
+ const file = (formData.get('file') || formData.get('image')) as File | null;
     // ── Route image files to AI OCR handler ──
     const fName = (file?.name || '').toLowerCase();
     if (IMAGE_EXTS.some(ext => fName.endsWith(ext))) {
