@@ -70,23 +70,40 @@ export const EXAMPLE_COMPOUNDS = [
 // ─── Supported file formats for upload ────────────────────────────────────────
 
 export const SUPPORTED_FORMATS = [
-  { ext: '.mol', name: 'MDL MOL', description: 'Single molecule structure file' },
-  { ext: '.sdf', name: 'SDF', description: 'Structure-Data File (multiple molecules)' },
-  { ext: '.mol2', name: 'MOL2', description: 'Tripos MOL2 format' },
-  { ext: '.pdb', name: 'PDB', description: 'Protein Data Bank format' },
-  { ext: '.cif', name: 'CIF', description: 'Crystallographic Information File' },
-  { ext: '.smi', name: 'SMILES', description: 'SMILES notation file' },
-  { ext: '.smiles', name: 'SMILES', description: 'SMILES notation file' },
-  { ext: '.smarts', name: 'SMARTS', description: 'SMARTS substructure pattern' },
-  { ext: '.inchi', name: 'InChI', description: 'InChI identifier file' },
-  { ext: '.cml', name: 'CML', description: 'Chemical Markup Language (XML)' },
-  { ext: '.xyz', name: 'XYZ', description: 'Cartesian coordinates file' },
-  { ext: '.cdxml', name: 'CDXML', description: 'ChemDraw XML format' },
-  { ext: '.json', name: 'JSON', description: 'Chemical JSON (CommonChem, PubChem, etc.)' },
-  { ext: '.txt', name: 'Text', description: 'Auto-detects SMILES/InChI/MOL content' },
+  // Chemical Structure Files
+  { ext: '.mol', name: 'MDL MOL', description: 'Single molecule structure file', category: 'chemical' as const },
+  { ext: '.sdf', name: 'SDF', description: 'Structure-Data File (multiple molecules)', category: 'chemical' as const },
+  { ext: '.mol2', name: 'MOL2', description: 'Tripos MOL2 format', category: 'chemical' as const },
+  { ext: '.pdb', name: 'PDB', description: 'Protein Data Bank format', category: 'chemical' as const },
+  { ext: '.cif', name: 'CIF', description: 'Crystallographic Information File', category: 'chemical' as const },
+  { ext: '.smi', name: 'SMILES', description: 'SMILES notation file', category: 'chemical' as const },
+  { ext: '.smiles', name: 'SMILES', description: 'SMILES notation file', category: 'chemical' as const },
+  { ext: '.smarts', name: 'SMARTS', description: 'SMARTS substructure pattern', category: 'chemical' as const },
+  { ext: '.inchi', name: 'InChI', description: 'InChI identifier file', category: 'chemical' as const },
+  { ext: '.cml', name: 'CML', description: 'Chemical Markup Language (XML)', category: 'chemical' as const },
+  { ext: '.xyz', name: 'XYZ', description: 'Cartesian coordinates file', category: 'chemical' as const },
+  { ext: '.cdxml', name: 'CDXML', description: 'ChemDraw XML format', category: 'chemical' as const },
+  { ext: '.json', name: 'JSON', description: 'Chemical JSON (CommonChem, PubChem, etc.)', category: 'chemical' as const },
+  { ext: '.txt', name: 'Text', description: 'Auto-detects SMILES/InChI/MOL content', category: 'chemical' as const },
+  // Image / Figure Formats (AI-powered structure recognition)
+  { ext: '.tif', name: 'TIFF', description: 'TIFF image — AI structure recognition', category: 'image' as const },
+  { ext: '.tiff', name: 'TIFF', description: 'TIFF image — AI structure recognition', category: 'image' as const },
+  { ext: '.png', name: 'PNG', description: 'PNG image — AI structure recognition', category: 'image' as const },
+  { ext: '.jpg', name: 'JPEG', description: 'JPEG image — AI structure recognition', category: 'image' as const },
+  { ext: '.jpeg', name: 'JPEG', description: 'JPEG image — AI structure recognition', category: 'image' as const },
+  { ext: '.bmp', name: 'BMP', description: 'BMP image — AI structure recognition', category: 'image' as const },
+  { ext: '.gif', name: 'GIF', description: 'GIF image — AI structure recognition', category: 'image' as const },
+  { ext: '.webp', name: 'WebP', description: 'WebP image — AI structure recognition', category: 'image' as const },
 ];
 
-export const ACCEPTED_EXTENSIONS = '.mol,.sdf,.mol2,.pdb,.cif,.smi,.smiles,.smarts,.inchi,.cml,.xyz,.cdxml,.json,.txt';
+export const ACCEPTED_EXTENSIONS = '.mol,.sdf,.mol2,.pdb,.cif,.smi,.smiles,.smarts,.inchi,.cml,.xyz,.cdxml,.json,.txt,.tif,.tiff,.png,.jpg,.jpeg,.bmp,.gif,.webp';
+
+export const IMAGE_EXTENSIONS = ['.tif', '.tiff', '.png', '.jpg', '.jpeg', '.bmp', '.gif', '.webp'];
+
+export function isImageFile(fileName: string): boolean {
+  const ext = '.' + fileName.split('.').pop()?.toLowerCase();
+  return IMAGE_EXTENSIONS.includes(ext);
+}
 
 export function detectQueryType(query: string): QueryType {
   const trimmed = query.trim();
