@@ -73,11 +73,11 @@ export default function ContactPage() {
                 Scientific content questions, editorial correspondence, and literature review inquiries.
               </p>
               <a
-                href="mailto:contact@phytoprecisionsystem.com"
+                href="mailto:contact@phytoinsight.com"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-colors"
               >
                 <Mail size={12} className="text-gray-400" />
-                contact@phytoprecisionsystem.com
+                contact@pphytoinsight.com
               </a>
             </motion.div>
 
@@ -99,11 +99,11 @@ export default function ContactPage() {
                 Platform technical issues, API integration questions, and system performance inquiries.
               </p>
               <a
-                href="mailto:contact@phytoprecisionsystem.com"
+                href="mailto:contact@phytoinsight.com"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-colors"
               >
                 <Mail size={12} className="text-gray-400" />
-                contact@phytoprecisionsystem.com
+                contact@phytoinsight.com
               </a>
             </motion.div>
 
@@ -125,11 +125,11 @@ export default function ContactPage() {
                 Institutional membership, licensing agreements, and strategic partnership discussions.
               </p>
               <a
-                href="mailto:partnerships@phytoprecisionsystem.com"
+                href="mailto:partnerships@phytoinsight.com"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-colors"
               >
                 <Mail size={12} className="text-gray-400" />
-                partnerships@phytoprecisionsystem.com
+                partnerships@phytoinsight.com
               </a>
             </motion.div>
           </div>
