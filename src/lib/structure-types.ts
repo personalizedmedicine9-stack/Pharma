@@ -52,25 +52,12 @@ export interface UploadParseResponse {
   error?: string;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
 export const EXAMPLE_COMPOUNDS = [
-  'Curcumin',
-  'Aspirin',
-  'Quercetin',
-  'Berberine',
-  'Resveratrol',
-  'Morphine',
-  'Caffeine',
-  'Metformin',
-  'Paclitaxel',
-  'Artemisinin',
+  'Curcumin', 'Aspirin', 'Quercetin', 'Berberine', 'Resveratrol',
+  'Morphine', 'Caffeine', 'Metformin', 'Paclitaxel', 'Artemisinin',
 ];
 
-// ─── Supported file formats for upload ────────────────────────────────────────
-
 export const SUPPORTED_FORMATS = [
-  // Chemical Structure Files
   { ext: '.mol', name: 'MDL MOL', description: 'Single molecule structure file', category: 'chemical' as const },
   { ext: '.sdf', name: 'SDF', description: 'Structure-Data File (multiple molecules)', category: 'chemical' as const },
   { ext: '.mol2', name: 'MOL2', description: 'Tripos MOL2 format', category: 'chemical' as const },
@@ -85,19 +72,17 @@ export const SUPPORTED_FORMATS = [
   { ext: '.cdxml', name: 'CDXML', description: 'ChemDraw XML format', category: 'chemical' as const },
   { ext: '.json', name: 'JSON', description: 'Chemical JSON (CommonChem, PubChem, etc.)', category: 'chemical' as const },
   { ext: '.txt', name: 'Text', description: 'Auto-detects SMILES/InChI/MOL content', category: 'chemical' as const },
-  // Image / Figure Formats (AI-powered structure recognition)
-  { ext: '.tif', name: 'TIFF', description: 'TIFF image — AI structure recognition', category: 'image' as const },
-  { ext: '.tiff', name: 'TIFF', description: 'TIFF image — AI structure recognition', category: 'image' as const },
-  { ext: '.png', name: 'PNG', description: 'PNG image — AI structure recognition', category: 'image' as const },
-  { ext: '.jpg', name: 'JPEG', description: 'JPEG image — AI structure recognition', category: 'image' as const },
-  { ext: '.jpeg', name: 'JPEG', description: 'JPEG image — AI structure recognition', category: 'image' as const },
-  { ext: '.bmp', name: 'BMP', description: 'BMP image — AI structure recognition', category: 'image' as const },
-  { ext: '.gif', name: 'GIF', description: 'GIF image — AI structure recognition', category: 'image' as const },
-  { ext: '.webp', name: 'WebP', description: 'WebP image — AI structure recognition', category: 'image' as const },
+  { ext: '.tif', name: 'TIFF', description: 'TIFF image - AI structure recognition', category: 'image' as const },
+  { ext: '.tiff', name: 'TIFF', description: 'TIFF image - AI structure recognition', category: 'image' as const },
+  { ext: '.png', name: 'PNG', description: 'PNG image - AI structure recognition', category: 'image' as const },
+  { ext: '.jpg', name: 'JPEG', description: 'JPEG image - AI structure recognition', category: 'image' as const },
+  { ext: '.jpeg', name: 'JPEG', description: 'JPEG image - AI structure recognition', category: 'image' as const },
+  { ext: '.bmp', name: 'BMP', description: 'BMP image - AI structure recognition', category: 'image' as const },
+  { ext: '.gif', name: 'GIF', description: 'GIF image - AI structure recognition', category: 'image' as const },
+  { ext: '.webp', name: 'WebP', description: 'WebP image - AI structure recognition', category: 'image' as const },
 ];
 
 export const ACCEPTED_EXTENSIONS = '.mol,.sdf,.mol2,.pdb,.cif,.smi,.smiles,.smarts,.inchi,.cml,.xyz,.cdxml,.json,.txt,.tif,.tiff,.png,.jpg,.jpeg,.bmp,.gif,.webp';
-
 export const IMAGE_EXTENSIONS = ['.tif', '.tiff', '.png', '.jpg', '.jpeg', '.bmp', '.gif', '.webp'];
 
 export function isImageFile(fileName: string): boolean {
@@ -107,7 +92,6 @@ export function isImageFile(fileName: string): boolean {
 
 export function detectQueryType(query: string): QueryType {
   const trimmed = query.trim();
-
   if (/^\d{1,9}$/.test(trimmed)) return 'cid';
   if (/^[A-Z]{14}-[A-Z]{10}-[A-Z]$/.test(trimmed)) return 'inchikey';
   if (/^InChI=/i.test(trimmed)) return 'inchi';
@@ -119,6 +103,5 @@ export function detectQueryType(query: string): QueryType {
       return 'smiles';
     }
   }
-
   return 'name';
 }
