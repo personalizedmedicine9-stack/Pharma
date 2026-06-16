@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Hexagon, Search, Leaf, AlertTriangle, Info, Copy, ExternalLink, ChevronDown, ChevronUp, Bookmark, BookmarkCheck, Atom, Beaker, CheckCircle, Database, Box, RotateCcw, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { Hexagon, Search, Leaf, AlertTriangle, Info, Copy, ExternalLink, ChevronDown, ChevronUp, Bookmark, BookmarkCheck, Atom, Beaker, CheckCircle, Database, Box, RotateCcw, ZoomIn, ZoomOut, Maximize2, Paperclip, X, Upload, FileText, Image, Loader2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
@@ -27,6 +27,15 @@ export default function StructureEngine({ onSearch, onSignInRequired }: Structur
   // Hydration-safe: only compute dynamic disabled state after mount
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+
+  // ─── File upload state ───
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [fileParsing, setFileParsing] = useState(false);
+  const [fileParseResult, setFileParseResult] = useState<Record<string, string | null> | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [showFormats, setShowFormats] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
@@ -82,6 +91,103 @@ export default function StructureEngine({ onSearch, onSignInRequired }: Structur
     });
   };
 
+  // ─── File handling ───
+  const IMAGE_EXTENSIONS = ['.tif', '.tiff', '.png', '.jpg', '.jpeg', '.bmp', '.gif', '.webp'];
+  const CHEMICAL_EXTENSIONS = ['.mol', '.sdf', '.mol2', '.pdb', '.cif', '.smi', '.smiles', '.smarts', '.inchi', '.cml', '.xyz', '.cdxml', '.json', '.txt'];
+  const ALL_EXTENSIONS = [...CHEMICAL_EXTENSIONS, ...IMAGE_EXTENSIONS];
+
+  const isImageFile = (file: File) => {
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    return IMAGE_EXTENSIONS.includes(ext) || file.type.startsWith('image/');
+  };
+
+  const handleFileSelect = (file: File) => {
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (!ALL_EXTENSIONS.includes(ext)) {
+      toast.error(`Unsupported format: ${ext}`);
+      return;
+    }
+    setAttachedFile(file);
+    setFileParseResult(null);
+    setError(null);
+  };
+
+  const handleFileParse = async () => {
+    if (!attachedFile) return;
+    setFileParsing(true);
+    setError(null);
+
+    try {
+      const isImage = isImageFile(attachedFile);
+      const formData = new FormData();
+      formData.append(isImage ? 'image' : 'file', attachedFile);
+
+      const endpoint = isImage ? '/api/structure/ocr' : '/api/structure/upload';
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        body: formData,
+        signal: AbortSignal.timeout(60000),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        setError(data.error || 'Failed to parse file');
+        setFileParsing(false);
+        return;
+      }
+
+      // Build extracted info from API response
+      // Both /api/structure/upload and /api/structure/ocr return flat objects
+      const extracted = {
+        smiles: data.smiles || null,
+        compoundName: data.compoundName || null,
+        inchi: data.inchi || null,
+        casNumber: data.casNumber || null,
+        molecularFormula: data.molecularFormula || null,
+        confidence: data.confidence || null,
+      };
+      setFileParseResult(extracted);
+
+      // Determine search query: use explicit searchQuery, or derive from extracted data
+      const searchQuery = data.searchQuery || extracted.smiles || extracted.inchi || extracted.casNumber || extracted.compoundName || null;
+
+      if (searchQuery) {
+        setQuery(searchQuery);
+        toast.success(`Structure extracted from ${attachedFile.name}`);
+      } else if (data.success === false) {
+        setError(data.error || 'Could not extract a searchable structure from this file.');
+      } else {
+        toast.warning('Could not extract a searchable structure from this file. Try entering a name or SMILES directly.');
+      }
+    } catch (err) {
+      setError('Failed to parse file. Please try again or enter the structure manually.');
+    }
+
+    setFileParsing(false);
+  };
+
+  const handleRemoveFile = () => {
+    setAttachedFile(null);
+    setFileParseResult(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (imageInputRef.current) imageInputRef.current.value = '';
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true);
+    else if (e.type === 'dragleave') setDragActive(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files?.[0]) handleFileSelect(e.dataTransfer.files[0]);
+  };
+
   // Compute disabled state — always true before mount to avoid hydration mismatch
   const isSubmitDisabled = mounted ? (loading || !query.trim()) : true;
 
@@ -113,6 +219,233 @@ export default function StructureEngine({ onSearch, onSignInRequired }: Structur
               required
               className="w-full px-4 py-3 md:py-3.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm md:text-base placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all shadow-sm"
             />
+          </div>
+
+          {/* ─── File Upload Section ─── */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs md:text-sm font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+                <Paperclip size={13} className="text-cyan-500" />
+                Attach Chemical Structure File
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowFormats(!showFormats)}
+                className="text-[10px] md:text-xs text-cyan-600 hover:text-cyan-800 font-medium underline underline-offset-2"
+              >
+                {showFormats ? 'Hide formats' : 'Supported formats'}
+              </button>
+            </div>
+
+            {/* Supported Formats Dropdown */}
+            <AnimatePresence>
+              {showFormats && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 md:p-4 space-y-3">
+                    <p className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-wider">Upload structure files exported from ChemDraw, Marvin JS, RDKit, Open Babel, or any chemical software.</p>
+
+                    {/* Chemical File Formats */}
+                    <div>
+                      <p className="text-[10px] md:text-xs font-bold text-slate-600 mb-1.5">Chemical Structure Files</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {[
+                          { ext: '.mol', label: 'MDL MOL' },
+                          { ext: '.sdf', label: 'SDF' },
+                          { ext: '.mol2', label: 'MOL2' },
+                          { ext: '.pdb', label: 'PDB' },
+                          { ext: '.cif', label: 'CIF' },
+                          { ext: '.smi', label: 'SMILES' },
+                          { ext: '.smiles', label: 'SMILES' },
+                          { ext: '.smarts', label: 'SMARTS' },
+                          { ext: '.inchi', label: 'InChI' },
+                          { ext: '.cml', label: 'CML' },
+                          { ext: '.xyz', label: 'XYZ' },
+                          { ext: '.cdxml', label: 'CDXML' },
+                          { ext: '.json', label: 'JSON' },
+                          { ext: '.txt', label: 'Text' },
+                        ].map(f => (
+                          <span key={f.ext} className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded text-[10px] md:text-xs">
+                            <span className="font-bold text-cyan-700">{f.ext}</span>
+                            <span className="text-slate-500">{f.label}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Image Formats */}
+                    <div>
+                      <p className="text-[10px] md:text-xs font-bold text-slate-600 mb-1.5 flex items-center gap-1.5">
+                        <Image size={12} className="text-purple-500" />
+                        Image / Figure Formats (AI-powered structure recognition)
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {[
+                          { ext: '.tif', label: 'TIFF' },
+                          { ext: '.tiff', label: 'TIFF' },
+                          { ext: '.png', label: 'PNG' },
+                          { ext: '.jpg', label: 'JPEG' },
+                          { ext: '.jpeg', label: 'JPEG' },
+                          { ext: '.bmp', label: 'BMP' },
+                          { ext: '.gif', label: 'GIF' },
+                          { ext: '.webp', label: 'WebP' },
+                        ].map(f => (
+                          <span key={f.ext} className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 border border-purple-200 rounded text-[10px] md:text-xs">
+                            <span className="font-bold text-purple-700">{f.ext}</span>
+                            <span className="text-purple-500">{f.label}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Drag & Drop Zone */}
+            <div
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              className={`relative border-2 border-dashed rounded-xl p-4 md:p-6 text-center transition-all cursor-pointer ${
+                dragActive
+                  ? 'border-cyan-400 bg-cyan-50'
+                  : attachedFile
+                    ? 'border-emerald-300 bg-emerald-50'
+                    : 'border-slate-200 bg-slate-50 hover:border-cyan-300 hover:bg-cyan-50'
+              }`}
+              onClick={() => {
+                if (!attachedFile) fileInputRef.current?.click();
+              }}
+            >
+              {/* Hidden file inputs */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ALL_EXTENSIONS.join(',')}
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) handleFileSelect(e.target.files[0]);
+                }}
+              />
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*,.tif,.tiff"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) handleFileSelect(e.target.files[0]);
+                }}
+              />
+
+              {!attachedFile ? (
+                <div className="space-y-2">
+                  <Upload size={28} className={`mx-auto ${dragActive ? 'text-cyan-500' : 'text-slate-400'}`} />
+                  <p className="text-sm md:text-base font-medium text-slate-600">
+                    {dragActive ? 'Drop your file here' : 'Drag & drop a structure file or image here'}
+                  </p>
+                  <p className="text-xs text-slate-400">or click to browse</p>
+                  <div className="flex justify-center gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        fileInputRef.current?.click();
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:border-cyan-400 hover:text-cyan-700 transition-all"
+                    >
+                      <FileText size={12} /> Structure File
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        imageInputRef.current?.click();
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg text-xs font-bold text-purple-700 hover:border-purple-400 transition-all"
+                    >
+                      <Image size={12} /> Image / Figure
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 text-left">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isImageFile(attachedFile) ? 'bg-purple-100' : 'bg-cyan-100'}`}>
+                    {isImageFile(attachedFile) ? <Image size={18} className="text-purple-600" /> : <FileText size={18} className="text-cyan-600" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-slate-800 truncate">{attachedFile.name}</p>
+                    <p className="text-[11px] text-slate-500">
+                      {(attachedFile.size / 1024).toFixed(1)} KB
+                      {isImageFile(attachedFile) && ' · Image — AI recognition'}
+                      {!isImageFile(attachedFile) && ' · Chemical structure file'}
+                    </p>
+                    {/* Parse result preview */}
+                    {fileParseResult && (
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {fileParseResult.smiles && (
+                          <span className="text-[10px] font-mono bg-cyan-50 border border-cyan-200 text-cyan-700 px-1.5 py-0.5 rounded">
+                            SMILES: {fileParseResult.smiles.length > 40 ? fileParseResult.smiles.substring(0, 40) + '…' : fileParseResult.smiles}
+                          </span>
+                        )}
+                        {fileParseResult.compoundName && (
+                          <span className="text-[10px] bg-emerald-50 border border-emerald-200 text-emerald-700 px-1.5 py-0.5 rounded">
+                            {fileParseResult.compoundName}
+                          </span>
+                        )}
+                        {fileParseResult.inchi && (
+                          <span className="text-[10px] font-mono bg-blue-50 border border-blue-200 text-blue-700 px-1.5 py-0.5 rounded">
+                            InChI
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {!fileParseResult && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFileParse();
+                        }}
+                        disabled={fileParsing}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-300 text-white rounded-lg text-xs font-bold transition-all"
+                      >
+                        {fileParsing ? (
+                          <>
+                            <Loader2 size={12} className="animate-spin" />
+                            {isImageFile(attachedFile) ? 'Analyzing…' : 'Parsing…'}
+                          </>
+                        ) : (
+                          <>
+                            <Search size={12} />
+                            Search This Structure
+                          </>
+                        )}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveFile();
+                      }}
+                      className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Remove file"
+                    >
+                      <X size={14} className="text-slate-400 hover:text-red-500" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <button
@@ -156,7 +489,7 @@ export default function StructureEngine({ onSearch, onSignInRequired }: Structur
             <Info size={18} className="text-white mt-0.5 flex-shrink-0" />
             <div className="text-xs md:text-sm text-gray-300 leading-relaxed">
               <span className="font-extrabold text-white">Data Sources: </span>
-              Enter a <strong className="text-white">compound name</strong> (Curcumin, Aspirin), <strong className="text-white">CAS number</strong> (458-37-7), <strong className="text-white">SMILES</strong> (CC1=CC=C), <strong className="text-white">InChI/InChIKey</strong>, or <strong className="text-white">PubChem CID</strong>. View <strong className="text-white">2D structures</strong> (PubChem PNG) and <strong className="text-white">3D conformers</strong> (interactive rotation/zoom from PubChem 3D data).
+              Enter a <strong className="text-white">compound name</strong> (Curcumin, Aspirin), <strong className="text-white">CAS number</strong> (458-37-7), <strong className="text-white">SMILES</strong> (CC1=CC=C), <strong className="text-white">InChI/InChIKey</strong>, or <strong className="text-white">PubChem CID</strong>. You can also <strong className="text-white">upload structure files</strong> (.mol, .sdf, .smi) or <strong className="text-white">images/figures</strong> (.tif, .png, .jpg) — AI will recognize the structure automatically. View <strong className="text-white">2D structures</strong> (PubChem PNG) and <strong className="text-white">3D conformers</strong> (interactive rotation/zoom from PubChem 3D data).
             </div>
           </div>
         </div>
