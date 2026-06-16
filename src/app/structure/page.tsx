@@ -109,34 +109,31 @@ export default function StructurePage() {
     setParsedFormula(null);
     setParsedCompoundName(null);
 
+    const isImage = isImageFile(file.name);
+
+    const tryEndpoint = async (endpoint: string, fieldName: string): Promise<Record<string, unknown> | null> => {
+      const fd = new FormData();
+      fd.append(fieldName, file);
+      try {
+        const res = await fetch(endpoint, { method: 'POST', body: fd });
+        const text = await res.text();
+        try { return JSON.parse(text); }
+        catch { return null; }
+      } catch { return null; }
+    };
+
     try {
-      const formData = new FormData();
-      const isImage = isImageFile(file.name);
+      let data: Record<string, unknown> | null = null;
 
       if (isImage) {
-        // Image files go to OCR endpoint (AI vision model)
-        formData.append('image', file);
+        data = await tryEndpoint('/api/structure/ocr', 'image');
+        if (!data) data = await tryEndpoint('/api/structure/upload', 'file');
       } else {
-        // Chemical structure files go to upload parser
-        formData.append('file', file);
+        data = await tryEndpoint('/api/structure/upload', 'file');
       }
 
-      const endpoint = isImage ? '/api/structure/ocr' : '/api/structure/upload';
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        body: formData,
-      });
-
-      // Safely parse JSON — handle non-JSON responses (e.g., HTML error pages)
-      let data: Record<string, unknown>;
-      try {
-        const text = await res.text();
-        data = JSON.parse(text);
-      } catch {
-        toast.error(isImage
-          ? 'Image analysis API is not available. Make sure the file src/app/api/structure/ocr/route.ts exists, then restart the dev server.'
-          : 'Upload API is not available. Make sure the file src/app/api/structure/upload/route.ts exists, then restart the dev server.'
-        );
+      if (!data) {
+        toast.error(isImage ? 'Could not analyze image. Please try again.' : 'Could not reach the upload server.');
         setUploadedFileName(null);
         return;
       }
@@ -146,7 +143,22 @@ export default function StructurePage() {
         if (data.inchi) setParsedInchi(data.inchi as string);
         if (data.molecularFormula) setParsedFormula(data.molecularFormula as string);
         if (data.compoundName) setParsedCompoundName(data.compoundName as string);
-
+        const desc = isImage
+          ? `AI recognized - ${data.confidence || 'medium'} confidence`
+          : [data.atomCount ? `${data.atomCount} atoms, ${data.bondCount} bonds` : '', data.molecularFormula || '', data.format ? `(${data.format})` : ''].filter(Boolean).join(' - ');
+        toast.success(`Parsed: ${data.compoundName || data.molecularFormula || file.name}`, { description: desc });
+      } else {
+        toast.error((data.error as string) || (isImage ? 'Could not recognize a chemical structure.' : 'Could not parse file.'));
+        if (data.hint) toast.info(data.hint as string, { duration: 6000 });
+        setUploadedFileName(null);
+      }
+    } catch {
+      toast.error(isImage ? 'Failed to analyze image.' : 'Failed to upload file.');
+      setUploadedFileName(null);
+    } finally {
+      setIsParsingFile(false);
+    }
+  }, []);
         const desc = isImage
           ? `AI recognized · ${data.confidence || 'medium'} confidence${data.convertedFrom ? ` · Converted from ${data.convertedFrom}` : ''}`
           : [
