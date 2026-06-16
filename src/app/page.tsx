@@ -69,7 +69,7 @@ export default function Home() {
                     <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                   <Link href="/ HebInsight" className="flex items-center gap-2 px-4 md:px-6 py-3 bg-amber-600 text-white rounded-xl text-xs md:text-sm font-bold shadow-lg hover:bg-amber-700 transition-all hover:shadow-xl group">
-                    <TreePine size={16} /> HerbInsight
+                    <TreePine size={16} /> PhytoInsight
                     <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                   <Link href="/structure" className="flex items-center gap-2 px-4 md:px-6 py-3 bg-cyan-600 text-white rounded-xl text-xs md:text-sm font-bold shadow-lg hover:bg-cyan-700 transition-all hover:shadow-xl group">
@@ -142,7 +142,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Features - 3 boxes: Interaction, Pharmacology, Chemical Structure (NO HerbInsight box) */}
+            {/* Features - 3 boxes: Interaction, Pharmacology, Chemical Structure (NO PhytoInsight box) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                 <div className="w-9 h-9 bg-[#0f172a] rounded-lg flex items-center justify-center mb-3">
