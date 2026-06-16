@@ -14,6 +14,7 @@ import {
   type CompoundResult, type StructureSearchResponse,
   type SearchMode, type ViewerMode,
   EXAMPLE_COMPOUNDS, SUPPORTED_FORMATS, ACCEPTED_EXTENSIONS,
+  isImageFile, IMAGE_EXTENSIONS,
 } from '@/lib/structure-types';
 
 // ─── 3Dmol.js CDN Loader ─────────────────────────────────────────────────────
@@ -110,37 +111,65 @@ export default function StructurePage() {
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch('/api/structure/upload', {
+      const isImage = isImageFile(file.name);
+
+      if (isImage) {
+        // Image files go to OCR endpoint (AI vision model)
+        formData.append('image', file);
+      } else {
+        // Chemical structure files go to upload parser
+        formData.append('file', file);
+      }
+
+      const endpoint = isImage ? '/api/structure/ocr' : '/api/structure/upload';
+      const res = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
         body: formData,
       });
-      const data = await res.json();
 
-      if (data.success && (data.smiles || data.inchi)) {
-        if (data.smiles) setParsedSmiles(data.smiles);
-        if (data.inchi) setParsedInchi(data.inchi);
-        if (data.molecularFormula) setParsedFormula(data.molecularFormula);
-        if (data.compoundName) setParsedCompoundName(data.compoundName);
+      // Safely parse JSON — handle non-JSON responses (e.g., HTML error pages)
+      let data: Record<string, unknown>;
+      try {
+        const text = await res.text();
+        data = JSON.parse(text);
+      } catch {
+        toast.error(isImage
+          ? 'Image analysis API is not available. Make sure the file src/app/api/structure/ocr/route.ts exists, then restart the dev server.'
+          : 'Upload API is not available. Make sure the file src/app/api/structure/upload/route.ts exists, then restart the dev server.'
+        );
+        setUploadedFileName(null);
+        return;
+      }
 
-        const desc = [
-          data.atomCount ? `${data.atomCount} atoms, ${data.bondCount} bonds` : '',
-          data.molecularFormula || '',
-          data.format ? `(${data.format})` : '',
-        ].filter(Boolean).join(' · ');
+      if (data.success && (data.smiles || data.inchi || data.compoundName)) {
+        if (data.smiles) setParsedSmiles(data.smiles as string);
+        if (data.inchi) setParsedInchi(data.inchi as string);
+        if (data.molecularFormula) setParsedFormula(data.molecularFormula as string);
+        if (data.compoundName) setParsedCompoundName(data.compoundName as string);
+
+        const desc = isImage
+          ? `AI recognized · ${data.confidence || 'medium'} confidence${data.convertedFrom ? ` · Converted from ${data.convertedFrom}` : ''}`
+          : [
+              data.atomCount ? `${data.atomCount} atoms, ${data.bondCount} bonds` : '',
+              data.molecularFormula || '',
+              data.format ? `(${data.format})` : '',
+            ].filter(Boolean).join(' · ');
 
         toast.success(`Parsed: ${data.compoundName || data.molecularFormula || file.name}`, {
           description: desc,
         });
       } else {
-        toast.error(data.error || 'Could not parse the uploaded file.');
-        if (data.hint) toast.info(data.hint, { duration: 6000 });
+        toast.error((data.error as string) || (isImage ? 'Could not recognize a chemical structure in this image.' : 'Could not parse the uploaded file.'));
+        if (data.hint) toast.info(data.hint as string, { duration: 6000 });
         setUploadedFileName(null);
       }
     } catch (err) {
       console.error('Upload error:', err);
-      toast.error('Failed to upload file. Check that the API route exists at src/app/api/structure/upload/route.ts');
+      const isImg = isImageFile(file.name);
+      toast.error(isImg
+        ? 'Failed to analyze image. Check that the OCR API route exists at src/app/api/structure/ocr/route.ts'
+        : 'Failed to upload file. Check that the API route exists at src/app/api/structure/upload/route.ts'
+      );
       setUploadedFileName(null);
     } finally {
       setIsParsingFile(false);
@@ -350,7 +379,9 @@ export default function StructurePage() {
                     {isParsingFile ? (
                       <div className="flex flex-col items-center gap-3">
                         <Loader2 size={32} className="text-cyan-500 animate-spin" />
-                        <p className="text-sm text-slate-500 font-medium">Parsing structure file...</p>
+                        <p className="text-sm text-slate-500 font-medium">
+                          {uploadedFileName && isImageFile(uploadedFileName) ? 'Analyzing image with AI...' : 'Parsing structure file...'}
+                        </p>
                       </div>
                     ) : uploadedFileName ? (
                       <div className="flex flex-col items-center gap-3">
@@ -413,13 +444,28 @@ export default function StructurePage() {
                           <span className="font-extrabold text-white">Supported formats: </span>
                           Upload structure files exported from ChemDraw, Marvin JS, RDKit, Open Babel, or any chemical software.
                         </p>
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                          {SUPPORTED_FORMATS.map(fmt => (
+                        {/* Chemical Structure Files */}
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
+                          {SUPPORTED_FORMATS.filter(f => f.category === 'chemical').map(fmt => (
                             <div key={fmt.ext} className="bg-slate-800 rounded-lg px-2 py-1.5 text-center">
                               <span className="text-cyan-300 font-bold text-[11px]">{fmt.ext}</span>
                               <p className="text-[9px] text-slate-400 mt-0.5 leading-tight">{fmt.name}</p>
                             </div>
                           ))}
+                        </div>
+                        {/* Image / Figure Formats */}
+                        <div className="mt-2">
+                          <p className="text-[10px] md:text-xs font-bold text-purple-300 mb-1.5 flex items-center gap-1.5">
+                            🖼 Image / Figure Formats (AI-powered structure recognition)
+                          </p>
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                            {SUPPORTED_FORMATS.filter(f => f.category === 'image').map(fmt => (
+                              <div key={fmt.ext} className="bg-purple-900/40 border border-purple-700/30 rounded-lg px-2 py-1.5 text-center">
+                                <span className="text-purple-300 font-bold text-[11px]">{fmt.ext}</span>
+                                <p className="text-[9px] text-purple-400 mt-0.5 leading-tight">{fmt.name}</p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
