@@ -48,8 +48,8 @@ export default function Home() {
                     <FlaskConical size={16} /> Pharmacology & Phytochemistry
                     <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                   </Link>
-                  <Link href="/ PhytoInsight" className="flex items-center gap-2 px-4 md:px-6 py-3 bg-amber-600 text-white rounded-xl text-xs md:text-sm font-bold shadow-lg hover:bg-amber-700 transition-all hover:shadow-xl group">
-                    <TreePine size={16} /> PhytoInsight
+                 <Link href="/herbinsight" className="flex items-center gap-2 px-4 md:px-6 py-3 bg-amber-600 text-white rounded-xl text-xs md:text-sm font-bold shadow-lg hover:bg-amber-700 transition-all hover:shadow-xl group">
+                    <TreePine size={16} /> HerbInsight
                     <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                   <Link href="/structure" className="flex items-center gap-2 px-4 md:px-6 py-3 bg-cyan-600 text-white rounded-xl text-xs md:text-sm font-bold shadow-lg hover:bg-cyan-700 transition-all hover:shadow-xl group">
