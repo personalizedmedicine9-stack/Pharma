@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { href: '/', label: 'Home' },
   { href: '/interaction', label: 'Interaction' },
   { href: '/pharmacology', label: 'Pharmacology & Phytochemistry' },
-  { href: '/HerbInsight', label: 'herbinsight' },
+  { href: '/herbInsight', label: 'HerbInsight' },
   { href: '/structure', label: 'Chemical Structure' },
   { href: '/methodology', label: 'Methodology' },
   { href: '/about', label: 'About' },
