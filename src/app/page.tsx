@@ -10,21 +10,6 @@ import { API_SOURCES, EXAMPLE_SEARCHES } from '@/lib/knowledge-base';
 export default function Home() {
     const [authModalOpen, setAuthModalOpen] = useState(false);
  
-  useEffect(() => {
-    if (!mountedRef.current) {
-      mountedRef.current = true;
-      const stored = localStorage.getItem('phytoinsight-consent');
-      if (stored === 'true') {
-        queueMicrotask(() => setConsentGiven(true));
-      }
-    }
-  }, []);
-
-  const handleAcceptConsent = () => {
-    localStorage.setItem('phytoinsight-consent', 'true');
-    setConsentGiven(true);
-  };
-
   const evidencePreviews: Record<string, string> = {
     'WarfarinSt. John\'s Wort': 'Major CYP3A4 interaction · High risk bleeding',
     'CyclosporineGinkgo biloba': 'P-glycoprotein modulation · Immunosuppressant levels',
