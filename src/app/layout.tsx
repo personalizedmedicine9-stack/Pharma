@@ -17,33 +17,52 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://phytoinsight.com"),
+
   title: "PhytoInsight — Scientific Evidence-Based Intelligence Platform",
+
   description:
     "Evidence-based scientific intelligence platform for pharmacological analysis, drug-herb interaction evaluation, and phytochemical profiling. Developed by Dr. Mahmoud Mostafa. Powered by PubMed, CrossRef, OpenAlex, and OpenFDA.",
+
+  verification: {
+    google: "pf5paDsLObwRC6H6NaprQkdHLrHdQpOHhndnW9obEyQ",
+  },
+
   keywords: [
     "PhytoInsight",
     "drug-herb interaction",
     "pharmacology",
     "phytochemistry",
     "evidence-based",
+    "medicinal plants",
+    "herbal medicine",
+    "natural products",
+    "pharmacognosy",
+    "plant compounds",
+    "scientific database",
     "PubMed",
     "CrossRef",
     "OpenAlex",
     "OpenFDA",
     "scientific literature",
   ],
+
   authors: [{ name: "Dr. Mahmoud Mostafa" }],
+
   icons: {
     icon: "/logo.svg",
   },
+
   openGraph: {
-    title: "PhytoInsight — Evidence-Based Intelligence",
+    title: "PhytoInsight",
     description:
-      "Evidence-based scientific intelligence platform for pharmacological analysis, drug-herb interaction evaluation, and phytochemical profiling.",
+      "Scientific platform for phytochemistry, pharmacology, medicinal plants and herb-drug interactions.",
+    url: "https://phytoinsight.com",
+    siteName: "PhytoInsight",
+    locale: "en_US",
     type: "website",
   },
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
