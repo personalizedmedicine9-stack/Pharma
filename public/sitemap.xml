@@ -1,18 +1,13 @@
-import { MetadataRoute } from 'next';
-
-export default function sitemap(): MetadataRoute.Sitemap {
-  const lastmod = new Date().toISOString();
-  
-  return [
-    { url: 'https://phytoinsight.com/', lastModified: lastmod, changeFrequency: 'weekly', priority: 1.0 },
-    { url: 'https://phytoinsight.com/interaction', lastModified: lastmod, changeFrequency: 'weekly', priority: 0.9 },
-    { url: 'https://phytoinsight.com/pharmacology', lastModified: lastmod, changeFrequency: 'weekly', priority: 0.9 },
-    { url: 'https://phytoinsight.com/herbinsight', lastModified: lastmod, changeFrequency: 'weekly', priority: 0.9 },
-    { url: 'https://phytoinsight.com/structure', lastModified: lastmod, changeFrequency: 'weekly', priority: 0.9 },
-    { url: 'https://phytoinsight.com/methodology', lastModified: lastmod, changeFrequency: 'monthly', priority: 0.8 },
-    { url: 'https://phytoinsight.com/about', lastModified: lastmod, changeFrequency: 'monthly', priority: 0.5 },
-    { url: 'https://phytoinsight.com/contact', lastModified: lastmod, changeFrequency: 'monthly', priority: 0.5 },
-    { url: 'https://phytoinsight.com/privacy', lastModified: lastmod, changeFrequency: 'yearly', priority: 0.3 },
-    { url: 'https://phytoinsight.com/terms', lastModified: lastmod, changeFrequency: 'yearly', priority: 0.3 },
-  ];
-}
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://phytoinsight.com/</loc></url>
+  <url><loc>https://phytoinsight.com/interaction</loc></url>
+  <url><loc>https://phytoinsight.com/pharmacology</loc></url>
+  <url><loc>https://phytoinsight.com/herbinsight</loc></url>
+  <url><loc>https://phytoinsight.com/structure</loc></url>
+  <url><loc>https://phytoinsight.com/methodology</loc></url>
+  <url><loc>https://phytoinsight.com/about</loc></url>
+  <url><loc>https://phytoinsight.com/contact</loc></url>
+  <url><loc>https://phytoinsight.com/privacy</loc></url>
+  <url><loc>https://phytoinsight.com/terms</loc></url>
+</urlset>
