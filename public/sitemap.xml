@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastmod = new Date().toISOString().split('T')[0];
+  const lastmod = new Date().toISOString();
   
   return [
     { url: 'https://phytoinsight.com/', lastModified: lastmod, changeFrequency: 'weekly', priority: 1.0 },
