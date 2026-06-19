@@ -143,22 +143,7 @@ export default function StructurePage() {
         if (data.inchi) setParsedInchi(data.inchi as string);
         if (data.molecularFormula) setParsedFormula(data.molecularFormula as string);
         if (data.compoundName) setParsedCompoundName(data.compoundName as string);
-        const desc = isImage
-          ? `AI recognized - ${data.confidence || 'medium'} confidence`
-          : [data.atomCount ? `${data.atomCount} atoms, ${data.bondCount} bonds` : '', data.molecularFormula || '', data.format ? `(${data.format})` : ''].filter(Boolean).join(' - ');
-        toast.success(`Parsed: ${data.compoundName || data.molecularFormula || file.name}`, { description: desc });
-      } else {
-        toast.error((data.error as string) || (isImage ? 'Could not recognize a chemical structure.' : 'Could not parse file.'));
-        if (data.hint) toast.info(data.hint as string, { duration: 6000 });
-        setUploadedFileName(null);
-      }
-    } catch {
-      toast.error(isImage ? 'Failed to analyze image.' : 'Failed to upload file.');
-      setUploadedFileName(null);
-    } finally {
-      setIsParsingFile(false);
-    }
-  }, []);
+        
         const desc = isImage
           ? `AI recognized · ${data.confidence || 'medium'} confidence${data.convertedFrom ? ` · Converted from ${data.convertedFrom}` : ''}`
           : [
